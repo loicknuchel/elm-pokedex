@@ -1,8 +1,9 @@
 {
   "scripts": {
-    "start": "concurrently \"npm run tw\" \"npm run elm\"",
+    "start": "concurrently \"npm run tw\" \"npm run elm\" \"npm run book\"",
     "tw": "tailwindcss -i styles.css -o dist/styles.css -w",
     "elm": "elm-live src/Main.elm -- --output dist/elm.js",
+    "book": "elm-live src/Components/Book.elm --port=8001 --start-page=book.html --pushstate -- --output dist/book.js",
     "format": "elm-format src --yes",
     "review": "elm-review"
   },
