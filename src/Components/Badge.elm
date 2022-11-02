@@ -1,7 +1,7 @@
-module Components.Badge exposing (doc, red)
+module Components.Badge exposing (doc)
 
 import ElmBook.Chapter as Chapter exposing (Chapter)
-import Html exposing (Html, div, span, text)
+import Html exposing (Html, div, text)
 import Html.Attributes exposing (class)
 
 

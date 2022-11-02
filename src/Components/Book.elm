@@ -1,6 +1,9 @@
 module Components.Book exposing (DocState, main)
 
 import Components.Badge as Badge
+import Components.Button as Button
+import Components.Card as Card
+import Components.Heading as Heading
 import ElmBook exposing (withChapters)
 
 
@@ -11,4 +14,4 @@ type alias DocState =
 main : ElmBook.Book DocState
 main =
     ElmBook.book "Pokedex Design System"
-        |> withChapters [ Badge.doc ]
+        |> withChapters [ Badge.doc, Button.doc, Card.doc, Heading.doc ]

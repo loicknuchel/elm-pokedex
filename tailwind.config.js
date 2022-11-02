@@ -2,7 +2,7 @@
 module.exports = {
   content: ["./src/**/*.elm"],
   theme: {
-    extend: {},
+    extend: {display: ["group-hover"]},
   },
   plugins: [],
 }

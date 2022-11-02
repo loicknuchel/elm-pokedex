@@ -1,7 +1,17 @@
 module Main exposing (Flags, Model, Msg, main)
 
 import Browser exposing (Document)
-import Html exposing (Html, text)
+import Components.Button as Button
+import Components.Card as Card
+import Components.Heading as Heading
+import Dict exposing (Dict)
+import Html exposing (Attribute, Html, div, text)
+import Html.Attributes exposing (class, style)
+import Html.Events exposing (onClick)
+import Http
+import Models.Pokemon exposing (Pokemon)
+import Models.PokemonId exposing (PokemonId)
+import Services.PokeApi as PokeApi exposing (ItemList, PokemonListUrl, PokemonUrl)
 
 
 main : Program Flags Model Msg
@@ -14,28 +24,101 @@ type alias Flags =
 
 
 type alias Model =
-    {}
+    { pokemons : Dict PokemonId Pokemon
+    , more : Maybe PokemonListUrl
+    , selected : Maybe Pokemon
+    }
 
 
 type Msg
-    = Noop
+    = GetPokemonList PokemonListUrl
+    | GotPokemonList (Result Http.Error (ItemList PokemonListUrl PokemonUrl))
+    | GotPokemon (Result Http.Error Pokemon)
+    | SelectPokemon Pokemon
+    | UnselectPokemon
 
 
 init : Flags -> ( Model, Cmd Msg )
 init _ =
-    ( {}, Cmd.none )
+    ( { pokemons = Dict.empty
+      , more = Nothing
+      , selected = Nothing
+      }
+    , PokeApi.firstPokemons GotPokemonList
+    )
 
 
 view : Model -> Document Msg
-view _ =
+view model =
     { title = "Elm Pokedex"
-    , body = [ text "Elm Pokedex!" ]
+    , body = [ model.selected |> Maybe.map viewPokemonDetails |> Maybe.withDefault (viewPokemonList model) ]
     }
 
 
+viewPokemonList : Model -> Html Msg
+viewPokemonList model =
+    div []
+        [ model.pokemons |> Dict.values |> List.sortBy .id |> List.map viewPokemonItem |> Card.teamGrid
+        , viewLoadMore model.more
+        ]
+
+
+viewPokemonItem : Pokemon -> Html Msg
+viewPokemonItem pokemon =
+    div [ onClick (SelectPokemon pokemon), class "cursor-pointer" ]
+        [ Card.team
+            { name = pokemon.name
+            , title = pokemon.types |> String.join " / "
+            , picture = pokemon.sprites.front
+            , pictureAlt = pokemon.sprites.back
+            }
+        ]
+
+
+viewLoadMore : Maybe PokemonListUrl -> Html Msg
+viewLoadMore more =
+    let
+        attr : Attribute Msg
+        attr =
+            more
+                |> Maybe.map (\url -> onClick (GetPokemonList url))
+                |> Maybe.withDefault (style "display" "hidden")
+    in
+    div [ class "my-24 text-center" ]
+        [ Button.white3 [ attr ] [ text "Load more" ]
+        ]
+
+
+viewPokemonDetails : Pokemon -> Html Msg
+viewPokemonDetails pokemon =
+    Heading.heading
+        { banner = "/assets/" ++ (pokemon.types |> List.head |> Maybe.withDefault "unknown") ++ "_banner.jpg"
+        , picture = pokemon.sprites.front
+        , pictureAlt = pokemon.sprites.back
+        , name = pokemon.name
+        , actions = [ Button.white3 [ onClick UnselectPokemon ] [ text "Close" ] ]
+        }
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
-update _ model =
-    ( model, Cmd.none )
+update msg model =
+    case msg of
+        GetPokemonList url ->
+            ( { model | more = Nothing }, PokeApi.listPokemons GotPokemonList url )
+
+        GotPokemonList res ->
+            ( { model | more = res |> Result.map .next |> Result.withDefault Nothing }
+            , Cmd.batch (res |> Result.map (.results >> List.map (.url >> PokeApi.getPokemon GotPokemon)) |> Result.withDefault [])
+            )
+
+        GotPokemon res ->
+            ( res |> Result.map (\pokemon -> { model | pokemons = model.pokemons |> Dict.insert pokemon.id pokemon }) |> Result.withDefault model, Cmd.none )
+
+        SelectPokemon pokemon ->
+            ( { model | selected = Just pokemon }, Cmd.none )
+
+        UnselectPokemon ->
+            ( { model | selected = Nothing }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
