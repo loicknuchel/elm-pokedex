@@ -8,6 +8,7 @@
     "review": "elm-review"
   },
   "devDependencies": {
+    "@tailwindcss/forms": "^0.5.3",
     "concurrently": "^7.5.0",
     "elm-book": "^1.0.1",
     "elm-format": "^0.8.5",

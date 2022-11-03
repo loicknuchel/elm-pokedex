@@ -1,8 +1,9 @@
 module Components.Heading exposing (HeadingModel, SimpleModel, doc, heading, simple)
 
 import Components.Button as Button
+import Components.Input as Input
 import ElmBook exposing (Msg)
-import ElmBook.Actions exposing (logAction)
+import ElmBook.Actions exposing (logAction, logActionWithString)
 import ElmBook.Chapter as Chapter exposing (Chapter)
 import Html exposing (Html, button, div, h1, h2, img, text)
 import Html.Attributes exposing (alt, class, src, type_)
@@ -11,6 +12,7 @@ import Html.Events exposing (onClick)
 
 type alias SimpleModel msg =
     { title : String
+    , search : { value : String, onChange : String -> msg }
     , actions : List (Html msg)
     }
 
@@ -21,6 +23,7 @@ simple model =
         [ div [ class "min-w-0 flex-1" ]
             [ h2 [ class "text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight" ] [ text model.title ]
             ]
+        , Input.text "search" "Search" model.search.value model.search.onChange
         , div [ class "mt-4 flex md:mt-0 md:ml-4" ] model.actions
         ]
 
@@ -60,9 +63,10 @@ heading model =
 -- DOCUMENTATION
 
 
-sampleSimple : SimpleModel msg
+sampleSimple : SimpleModel (Msg state)
 sampleSimple =
     { title = "Back End Developer"
+    , search = { value = "", onChange = logActionWithString "search change" }
     , actions =
         [ button [ type_ "button", class "inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" ]
             [ text "Edit" ]

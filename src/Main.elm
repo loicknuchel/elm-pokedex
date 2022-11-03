@@ -34,6 +34,7 @@ type alias Model =
     , more : Maybe PokemonListUrl
     , selected : Maybe Pokemon
     , favorites : Set PokemonId
+    , search : String
     }
 
 
@@ -46,6 +47,7 @@ type Msg
     | GotFavorites (Result Decode.Error (Set PokemonId))
     | ToggleFavorite PokemonId
     | RandomPokemon
+    | ChangeSearch String
     | Noop
 
 
@@ -55,6 +57,7 @@ init _ =
       , more = Nothing
       , selected = Nothing
       , favorites = Set.empty
+      , search = ""
       }
     , Cmd.batch
         [ PokeApi.firstPokemons GotPokemonList
@@ -67,23 +70,32 @@ view : Model -> Document Msg
 view model =
     { title = "Elm Pokedex"
     , body =
-        [ viewHeader
+        [ viewHeader model.search
         , model.selected |> Maybe.map (viewPokemonDetails model.favorites) |> Maybe.withDefault (viewPokemonList model)
         ]
     }
 
 
-viewHeader : Html Msg
-viewHeader =
+viewHeader : String -> Html Msg
+viewHeader search =
     div [ class "mt-6 mb-12 mx-auto max-w-5xl" ]
-        [ Heading.simple { title = "Elm Pokedex", actions = [ Button.white3 [ onClick RandomPokemon ] [ text "View random" ] ] }
+        [ Heading.simple
+            { title = "Elm Pokedex"
+            , search = { value = search, onChange = ChangeSearch }
+            , actions = [ Button.white3 [ onClick RandomPokemon ] [ text "View random" ] ]
+            }
         ]
 
 
 viewPokemonList : Model -> Html Msg
 viewPokemonList model =
     div []
-        [ model.pokemons |> Dict.values |> List.sortBy .id |> List.map (viewPokemonItem model.favorites) |> Card.teamGrid
+        [ model.pokemons
+            |> Dict.values
+            |> List.filter (\p -> p.name |> String.contains model.search)
+            |> List.sortBy .id
+            |> List.map (viewPokemonItem model.favorites)
+            |> Card.teamGrid
         , viewLoadMore model.more
         ]
 
@@ -172,6 +184,9 @@ update msg model =
 
                 head :: tail ->
                     ( model, Random.generate SelectPokemon (Random.uniform head tail) )
+
+        ChangeSearch value ->
+            ( { model | search = value }, Cmd.none )
 
         Noop ->
             ( model, Cmd.none )
