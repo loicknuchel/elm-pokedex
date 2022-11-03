@@ -13,6 +13,7 @@ import Http
 import Json.Decode as Decode
 import Models.Pokemon exposing (Pokemon)
 import Models.PokemonId exposing (PokemonId)
+import Random
 import Services.PokeApi as PokeApi exposing (ItemList, PokemonListUrl, PokemonUrl)
 import Services.Storage as Storage
 import Set exposing (Set)
@@ -44,6 +45,7 @@ type Msg
     | UnselectPokemon
     | GotFavorites (Result Decode.Error (Set PokemonId))
     | ToggleFavorite PokemonId
+    | RandomPokemon
     | Noop
 
 
@@ -64,8 +66,18 @@ init _ =
 view : Model -> Document Msg
 view model =
     { title = "Elm Pokedex"
-    , body = [ model.selected |> Maybe.map (viewPokemonDetails model.favorites) |> Maybe.withDefault (viewPokemonList model) ]
+    , body =
+        [ viewHeader
+        , model.selected |> Maybe.map (viewPokemonDetails model.favorites) |> Maybe.withDefault (viewPokemonList model)
+        ]
     }
+
+
+viewHeader : Html Msg
+viewHeader =
+    div [ class "mt-6 mb-12 mx-auto max-w-5xl" ]
+        [ Heading.simple { title = "Elm Pokedex", actions = [ Button.white3 [ onClick RandomPokemon ] [ text "View random" ] ] }
+        ]
 
 
 viewPokemonList : Model -> Html Msg
@@ -152,6 +164,14 @@ update msg model =
 
         ToggleFavorite id ->
             ( model, model.favorites |> Set.toggle id |> Storage.setFavorite )
+
+        RandomPokemon ->
+            case model.pokemons |> Dict.values of
+                [] ->
+                    ( model, Cmd.none )
+
+                head :: tail ->
+                    ( model, Random.generate SelectPokemon (Random.uniform head tail) )
 
         Noop ->
             ( model, Cmd.none )

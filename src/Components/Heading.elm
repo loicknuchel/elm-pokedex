@@ -1,12 +1,28 @@
-module Components.Heading exposing (HeadingModel, doc, heading)
+module Components.Heading exposing (HeadingModel, SimpleModel, doc, heading, simple)
 
 import Components.Button as Button
 import ElmBook exposing (Msg)
 import ElmBook.Actions exposing (logAction)
 import ElmBook.Chapter as Chapter exposing (Chapter)
-import Html exposing (Html, div, h1, img, text)
-import Html.Attributes exposing (alt, class, src)
+import Html exposing (Html, button, div, h1, h2, img, text)
+import Html.Attributes exposing (alt, class, src, type_)
 import Html.Events exposing (onClick)
+
+
+type alias SimpleModel msg =
+    { title : String
+    , actions : List (Html msg)
+    }
+
+
+simple : SimpleModel msg -> Html msg
+simple model =
+    div [ class "md:flex md:items-center md:justify-between" ]
+        [ div [ class "min-w-0 flex-1" ]
+            [ h2 [ class "text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight" ] [ text model.title ]
+            ]
+        , div [ class "mt-4 flex md:mt-0 md:ml-4" ] model.actions
+        ]
 
 
 type alias HeadingModel msg =
@@ -44,6 +60,18 @@ heading model =
 -- DOCUMENTATION
 
 
+sampleSimple : SimpleModel msg
+sampleSimple =
+    { title = "Back End Developer"
+    , actions =
+        [ button [ type_ "button", class "inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" ]
+            [ text "Edit" ]
+        , button [ type_ "button", class "ml-3 inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" ]
+            [ text "Publish" ]
+        ]
+    }
+
+
 sampleHeading : HeadingModel (Msg state)
 sampleHeading =
     { banner = "https://images.unsplash.com/photo-1444628838545-ac4016a5418a?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80"
@@ -61,5 +89,6 @@ doc : Chapter x
 doc =
     Chapter.chapter "Heading"
         |> Chapter.renderComponentList
-            [ ( "heading", heading sampleHeading )
+            [ ( "simple", simple sampleSimple )
+            , ( "heading", heading sampleHeading )
             ]
