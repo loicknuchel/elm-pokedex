@@ -11,7 +11,15 @@
 </head>
 <body>
 <script>
-    Elm.Main.init()
+    var app = Elm.Main.init()
+    app.ports.getItem && app.ports.getItem.subscribe(function(key) {
+        var item = JSON.parse(localStorage.getItem(key))
+        app.ports.gotItem && app.ports.gotItem.send({key, value: item})
+    })
+    app.ports.setItem && app.ports.setItem.subscribe(function(msg) {
+        localStorage.setItem(msg.key, JSON.stringify(msg.value))
+        app.ports.gotItem && app.ports.gotItem.send(msg)
+    })
 </script>
 </body>
 </html>
